@@ -66,7 +66,7 @@ async def kino_add_handler(msg: types.Message):
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
 
 
-@dp.message_handler(state=AddMedia.media, content_types=types.ContentType.VIDEO)
+@dp.message_handler(lambda msg: msg.text == "❌", state=AddMedia.media, content_types=[types.ContentType.VIDEO, types.ContentType.TEXT])
 async def handle_video(msg: types.Message, state: FSMContext):
     if msg.text == "❌":
         await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
@@ -76,12 +76,6 @@ async def handle_video(msg: types.Message, state: FSMContext):
         if data:
             await msg.reply(f"Kino malumotlar bazasiga saqlandi ✅\nKino Kodi: {data}", reply_markup=movies_btn())
         await state.finish()
-
-
-@dp.message_handler(Text("❌"))
-async def exit_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
-        await msg.answer("Bosh menyu 🔮", reply_markup=admin_btn())
 
 
 @dp.message_handler(Text("Kanallar 🖇"))
@@ -173,6 +167,12 @@ async def channel_check_handler(callback: types.CallbackQuery):
         await callback.message.delete()
     else:
         await callback.message.answer("Iltimos quidagi kanallarga obuna bo'ling", reply_markup=forced_channel())
+
+
+@dp.message_handler(Text("❌"))
+async def exit_handler(msg: types.Message):
+    if msg.from_user.id == int(os.getenv("ADMIN")):
+        await msg.answer("Bosh menyu 🔮", reply_markup=admin_btn())
 
 
 @dp.message_handler(lambda x: x.text.isdigit())
