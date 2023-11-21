@@ -21,8 +21,8 @@ dp = Dispatcher(bot=bot, storage=MemoryStorage())
 @dp.message_handler(commands="start")
 async def welcome_handler(msg: types.Message):
     create_user(msg.from_user.id)
-    await bot.set_my_commands(commands=[types.BotCommand("start", "Ishga tushirish ♻️"), types.BotCommand('help', "Yordam olish 🛠")])
-    await bot.send_message(msg.chat.id, text="Assalomu alaykum! Videoni yuboring va men uni kanalga yuborib, keyin uni sizga forward qilib beraman")
+    await bot.set_my_commands(commands=[types.BotCommand("start", "Ishga tushirish ♻️")])
+    await bot.send_message(msg.chat.id, text=f"Assalomu alaykum {msg.from_user.first_name} 🤖\nSaraKinoBot - orqali siz o'zingizga yoqqani kinoni topishingiz mumkin 🎬\nShunchaki kino kodini yuboring va kinoni oling ✅")
 
 
 @dp.message_handler(commands="panel")
