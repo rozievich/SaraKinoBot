@@ -96,17 +96,13 @@ def check_channels(telegram_id: int):
     TOKEN = getenv("TOKEN")
     channels = channel.get_datas()
     summa = 0
-    for i in channels:
-        url = f'https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id=@{i[1]}&user_id={telegram_id}'
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            chat_member_status = data.get('result', {}).get('status', '')
-            if chat_member_status in ["administrator", 'member', 'creator']:
-                summa += 1
-        else:
-            break
-    return True if summa == len(channels) else False
+    try:
+        statuses = [requests.get(f'https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id=@{i[1]}&user_id={telegram_id}').json().get('result', {}).get('status', '') for i in channels]
+        summa = statuses.count("administrator") + statuses.count("member") + statuses.count("creator")
+    except Exception:
+        return None
+
+    return summa == len(channels)
 
 
 def get_channels():

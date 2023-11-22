@@ -3,10 +3,11 @@ import logging
 from dotenv import load_dotenv
 from db.connect import startup_table
 from aiogram import Bot, Dispatcher, types, executor
+from config.tasks import send_advertisement
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from states.state_admin import AddMedia, ReklamaState, AddChannelState, DeleteChannelState
-from models.model import create_user, get_users, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, check_channels
+from models.model import create_user, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, check_channels
 from buttons.inline_keyboards import forced_channel
 from buttons.reply_keyboards import admin_btn, channels_btn, movies_btn, exit_btn
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -66,15 +67,20 @@ async def kino_add_handler(msg: types.Message):
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
 
 
-@dp.message_handler(lambda msg: msg.text == "❌", state=AddMedia.media, content_types=[types.ContentType.VIDEO, types.ContentType.TEXT])
+@dp.message_handler(state=AddMedia.media, content_types=[types.ContentType.VIDEO, types.ContentType.TEXT])
 async def handle_video(msg: types.Message, state: FSMContext):
-    if msg.text == "❌":
-        await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
-        await state.finish()
-    else:
-        data = create_movie(file_id=msg.video.file_id, caption=msg.caption)
-        if data:
-            await msg.reply(f"Kino malumotlar bazasiga saqlandi ✅\nKino Kodi: {data}", reply_markup=movies_btn())
+    try:
+        if msg.text == "❌":
+            await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
+            await state.finish()
+        else:
+            data = create_movie(
+                file_id=msg.video.thumbnail.file_id, caption=msg.caption)
+            if data:
+                await msg.reply(f"Kino malumotlar bazasiga saqlandi ✅\nKino Kodi: {data}", reply_markup=movies_btn())
+            await state.finish()
+    except:
+        await msg.answer("Iltimos Kino yuboring!", reply_markup=movies_btn())
         await state.finish()
 
 
@@ -148,16 +154,12 @@ async def rek_state(msg: types.Message, state: FSMContext):
         await bot.send_message(chat_id=msg.chat.id, text="Reklama yuborish bekor qilindi 🤖❌", reply_markup=admin_btn())
         await state.finish()
     else:
-        await bot.send_message(chat_id=msg.chat.id, text="Reklama yuborish boshlandi 🤖✅")
-        summa = 0
-        for i in get_users():
-            if int(i['telegram_id']) != int(os.getenv("ADMIN")):
-                try:
-                    await msg.copy_to(int(i['telegram_id']), caption=msg.caption, caption_entities=msg.caption_entities, reply_markup=msg.reply_markup)
-                except:
-                    summa += 1
-        await bot.send_message(int(os.getenv("ADMIN")), text=f"Botni bloklagan Userlar soni: {summa}", reply_markup=admin_btn())
+        await bot.send_message(chat_id=msg.chat.id, text="Reklama yuborish boshlandi 🤖✅", reply_markup=admin_btn())
         await state.finish()
+        try:
+            send_advertisement(msg)
+        except Exception:
+            await msg.reply("Kutilmagan xatolik yuzaga keldi ⚠️")
 
 
 @dp.callback_query_handler(lambda x: x.data == "channel_check")
