@@ -3,14 +3,14 @@ from os import getenv
 from dotenv import load_dotenv
 from psycopg2.extras import DictCursor
 
-load_dotenv()
+load_dotenv(".env")
 
 conn = psycopg2.connect(
+    user="postgres",
     dbname=getenv('DB_NAME'),
-    user=getenv("DB_USER"),
     password=getenv('PASSWORD'),
     host=getenv('HOST'),
-    port=getenv("PORT"),
+    port=5432,
     cursor_factory=DictCursor
 )
 cur = conn.cursor()

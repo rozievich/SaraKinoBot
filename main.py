@@ -3,11 +3,10 @@ import logging
 from dotenv import load_dotenv
 from db.connect import startup_table
 from aiogram import Bot, Dispatcher, types, executor
-from config.tasks import send_advertisement
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from states.state_admin import AddMedia, ReklamaState, AddChannelState, DeleteChannelState
-from models.model import create_user, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, check_channels
+from models.model import create_user, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, check_channels, get_users
 from buttons.inline_keyboards import forced_channel
 from buttons.reply_keyboards import admin_btn, channels_btn, movies_btn, exit_btn
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -23,7 +22,7 @@ dp = Dispatcher(bot=bot, storage=MemoryStorage())
 async def welcome_handler(msg: types.Message):
     create_user(msg.from_user.id)
     await bot.set_my_commands(commands=[types.BotCommand("start", "Ishga tushirish ♻️")])
-    await bot.send_message(msg.chat.id, text=f"Assalomu alaykum {msg.from_user.first_name} 🤖\nSaraKinoBot - orqali siz o'zingizga yoqqani kinoni topishingiz mumkin 🎬\nShunchaki kino kodini yuboring va kinoni oling ✅")
+    await bot.send_message(msg.chat.id, text=f"Assalomu alaykum {msg.from_user.first_name} 🤖\n<b>Tarjimalar Tv Bot</b> - orqali siz o'zingizga yoqqan kinoni topishingiz mumkin 🎬\nShunchaki kino kodini yuboring va kinoni oling ✅", parse_mode=types.ParseMode.HTML)
 
 
 @dp.message_handler(commands="panel")
@@ -67,7 +66,7 @@ async def kino_add_handler(msg: types.Message):
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
 
 
-@dp.message_handler(state=AddMedia.media, content_types=[types.ContentType.VIDEO, types.ContentType.TEXT])
+@dp.message_handler(state=AddMedia.media, content_types=types.ContentType.ANY)
 async def handle_video(msg: types.Message, state: FSMContext):
     try:
         if msg.text == "❌":
@@ -75,7 +74,7 @@ async def handle_video(msg: types.Message, state: FSMContext):
             await state.finish()
         else:
             data = create_movie(
-                file_id=msg.video.thumbnail.file_id, caption=msg.caption)
+                file_id=msg.video.file_id, caption=msg.caption)
             if data:
                 await msg.reply(f"Kino malumotlar bazasiga saqlandi ✅\nKino Kodi: {data}", reply_markup=movies_btn())
             await state.finish()
@@ -157,9 +156,19 @@ async def rek_state(msg: types.Message, state: FSMContext):
         await bot.send_message(chat_id=msg.chat.id, text="Reklama yuborish boshlandi 🤖✅", reply_markup=admin_btn())
         await state.finish()
         try:
-            send_advertisement(msg)
-        except Exception:
-            await msg.reply("Kutilmagan xatolik yuzaga keldi ⚠️")
+            summa = 0
+            users = get_users()
+            admin_id = int(os.getenv("ADMIN"))
+            for user in users:
+                if int(user['telegram_id']) != admin_id:
+                    try:
+                        await msg.copy_to(int(user['telegram_id']), caption=msg.caption, caption_entities=msg.caption_entities, reply_markup=msg.reply_markup)
+                    except Exception as e:
+                        print(f"Send Error: {e}")
+                        summa += 1
+            await bot.send_message(admin_id, text=f"Botni bloklagan Userlar soni: {summa}")
+        except Exception as e:
+            print(f"Error: {e}")
 
 
 @dp.callback_query_handler(lambda x: x.data == "channel_check")
@@ -183,7 +192,7 @@ async def forward_last_video(msg: types.Message):
     if check:
         data = get_movie(int(msg.text))
         if data:
-            await bot.send_video(chat_id=msg.from_user.id, video=data[0], caption=f"{data[1]}\n\n🤖 Bizning bot: @Sarakinolar_bot")
+            await bot.send_video(chat_id=msg.from_user.id, video=data[0], caption=f"{data[1]}\n\n🤖 Bizning bot: @Tarjimalar_Tv_bot")
         else:
             await msg.reply(f"{msg.text} - id bilan hech qanday kino topilmadi ❌")
     else:
