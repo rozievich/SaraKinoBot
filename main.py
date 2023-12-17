@@ -1,19 +1,22 @@
+import os
 import logging
+from dotenv import load_dotenv
 from db.connect import startup_table
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
-from states.state_admin import AddMedia, ReklamaState, AddChannelState, DeleteChannelState
-from models.model import create_user, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, check_channels, get_users
+from states.state_admin import AddMedia, ReklamaState, AddChannelState, DeleteChannelState, DeleteMovieState
+from models.model import create_user, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, check_channels, get_users, delete_movie
 from buttons.inline_keyboards import forced_channel
 from buttons.reply_keyboards import admin_btn, channels_btn, movies_btn, exit_btn
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
+load_dotenv(".env")
 logging.basicConfig(level=logging.INFO)
-TOKEN = "6498963188:AAE8RLAhSm7PoLEZxC7SM4XYrbeXZLwRSRs"
+TOKEN = os.getenv("TOKEN")
 bot = Bot(TOKEN)
 dp = Dispatcher(bot=bot, storage=MemoryStorage())
-admin = 647857662
+admin = os.getenv("ADMIN")
 
 @dp.message_handler(commands="start")
 async def welcome_handler(msg: types.Message):
@@ -70,14 +73,54 @@ async def handle_video(msg: types.Message, state: FSMContext):
             await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
             await state.finish()
         else:
-            data = create_movie(
-                file_id=msg.video.file_id, caption=msg.caption)
+            async with state.proxy() as data:
+                data['file_id'] = msg.video.file_id
+                data['caption'] = msg.caption
+            await AddMedia.media_id.set()
+            await msg.answer(text="Iltimos Kino uchun ID kiriting: ", reply_markup=exit_btn())
+    except:
+        await msg.answer("Iltimos Kino yuboring!", reply_markup=exit_btn())
+    
+
+@dp.message_handler(state=AddMedia.media_id, content_types=types.ContentType.TEXT)
+async def handle_media_id(msg: types.Message, state: FSMContext):
+    try:
+        if msg.text == "❌":
+            await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
+            await state.finish()
+        else:
+            async with state.proxy() as data:
+                data['post_id'] = msg.text
+                data = create_movie(post_id=int(data["post_id"]), file_id=data['file_id'], caption=data['caption'])
             if data:
                 await msg.reply(f"Kino malumotlar bazasiga saqlandi ✅\nKino Kodi: {data}", reply_markup=movies_btn())
             await state.finish()
     except:
-        await msg.answer("Iltimos Kino yuboring!", reply_markup=movies_btn())
-        await state.finish()
+        await msg.answer("Iltimos Kod sifatida Raqam yuboring!", reply_markup=exit_btn())
+
+
+@dp.message_handler(Text("Kino o'chirish 🗑"))
+async def handle_delete_media_func(msg: types.Message):
+    if msg.from_user.id == int(admin):
+        await DeleteMovieState.post_id.set()
+        await msg.answer("Kinoni Kodini yuborishingiz mumkin 🎬", reply_markup=exit_btn())
+    else:
+        await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
+
+
+@dp.message_handler(state=DeleteMovieState.post_id)
+async def handle_delete_media(msg: types.Message, state: FSMContext):
+    try:
+        if msg.text == "❌":
+            await msg.answer("Kino o'chirish bekor qilindi ❌", reply_markup=movies_btn())
+            await state.finish()
+        else:
+            data = delete_movie(int(msg.text))
+            await msg.reply(text=data, reply_markup=movies_btn())
+            await state.finish()
+    except:
+        await msg.answer("Iltimos Kod sifatida Raqam yuboring!", reply_markup=exit_btn())
+
 
 
 @dp.message_handler(Text("Kanallar 🖇"))
@@ -189,7 +232,10 @@ async def forward_last_video(msg: types.Message):
     if check:
         data = get_movie(int(msg.text))
         if data:
-            await bot.send_video(chat_id=msg.from_user.id, video=data[0], caption=f"{data[1]}\n\n🤖 Bizning bot: @Tarjimalar_Tv_bot")
+            try:
+                await bot.send_video(chat_id=msg.from_user.id, video=data[0], caption=f"{data[1]}\n\n🤖 Bizning bot: @Tarjimalar_Tv_bot")
+            except:
+                await msg.reply(f"{msg.text} - id bilan hech qanday kino topilmadi ❌") 
         else:
             await msg.reply(f"{msg.text} - id bilan hech qanday kino topilmadi ❌")
     else:

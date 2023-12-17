@@ -7,6 +7,7 @@ class ReklamaState(StatesGroup):
 
 class AddMedia(StatesGroup):
     media = State()
+    media_id = State()
 
 
 class AddChannelState(StatesGroup):
@@ -15,3 +16,8 @@ class AddChannelState(StatesGroup):
 
 class DeleteChannelState(StatesGroup):
     username = State()
+
+
+class DeleteMovieState(StatesGroup):
+    post_id = State()
+    

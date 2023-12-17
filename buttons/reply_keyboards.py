@@ -14,8 +14,9 @@ def movies_btn():
     btn = ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True, row_width=2)
     statistika = KeyboardButton("Kino Statistika 📊")
     add_movie = KeyboardButton("Kino qo'shish 📥")
+    delete_movie = KeyboardButton("Kino o'chirish 🗑")
     exits = KeyboardButton("❌")
-    return btn.add(statistika, add_movie, exits)
+    return btn.add(statistika, add_movie, delete_movie, exits)
 
 
 def channels_btn():

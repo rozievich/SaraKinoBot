@@ -31,7 +31,7 @@ def startup_table():
     media_query = '''
     CREATE TABLE IF NOT EXISTS movies(
         id BIGSERIAL PRIMARY KEY,
-        post_id BIGSERIAL NOT NULL,
+        post_id INT NOT NULL,
         file_id VARCHAR(800) NOT NULL,
         caption TEXT,
         created_at TIMESTAMP DEFAULT now()
