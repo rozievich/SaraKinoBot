@@ -1,6 +1,4 @@
-import os
 import logging
-from dotenv import load_dotenv
 from db.connect import startup_table
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.dispatcher.filters import Text
@@ -11,12 +9,11 @@ from buttons.inline_keyboards import forced_channel
 from buttons.reply_keyboards import admin_btn, channels_btn, movies_btn, exit_btn
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-load_dotenv()
 logging.basicConfig(level=logging.INFO)
-TOKEN = os.getenv("TOKEN")
+TOKEN = "6498963188:AAE8RLAhSm7PoLEZxC7SM4XYrbeXZLwRSRs"
 bot = Bot(TOKEN)
 dp = Dispatcher(bot=bot, storage=MemoryStorage())
-
+admin = 647857662
 
 @dp.message_handler(commands="start")
 async def welcome_handler(msg: types.Message):
@@ -27,7 +24,7 @@ async def welcome_handler(msg: types.Message):
 
 @dp.message_handler(commands="panel")
 async def admin_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await msg.answer(f"Assalomu alaykum {msg.from_user.first_name} 🤖\nAdmin sahifaga xush kelibsiz ⚙️", reply_markup=admin_btn())
     else:
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
@@ -35,7 +32,7 @@ async def admin_handler(msg: types.Message):
 
 @dp.message_handler(Text("Statistika 📊"))
 async def user_statistika_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await msg.answer(text=statistika_user(), reply_markup=admin_btn())
     else:
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
@@ -43,7 +40,7 @@ async def user_statistika_handler(msg: types.Message):
 
 @dp.message_handler(Text("Kinolar 🎬"))
 async def media_statistika_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await msg.answer("Kinolar kategoriyasiga xush kelibsiz 🛠", reply_markup=movies_btn())
     else:
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
@@ -51,7 +48,7 @@ async def media_statistika_handler(msg: types.Message):
 
 @dp.message_handler(Text("Kino Statistika 📊"))
 async def kino_statistika_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await msg.answer(text=statistika_movie(), reply_markup=movies_btn())
     else:
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
@@ -59,7 +56,7 @@ async def kino_statistika_handler(msg: types.Message):
 
 @dp.message_handler(Text("Kino qo'shish 📥"))
 async def kino_add_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await AddMedia.media.set()
         await msg.answer("Kinoni yuborishingiz mumkin 🎬", reply_markup=exit_btn())
     else:
@@ -85,7 +82,7 @@ async def handle_video(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(Text("Kanallar 🖇"))
 async def channels_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await msg.answer(text=get_channels(), reply_markup=channels_btn())
     else:
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
@@ -93,7 +90,7 @@ async def channels_handler(msg: types.Message):
 
 @dp.message_handler(Text("Kanal qo'shish ⚙️"))
 async def add_channel_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await AddChannelState.username.set()
         await msg.answer(text="Qo'shish kerak bo'lgan kanal Usernameni kiriting ✍️", reply_markup=exit_btn())
     else:
@@ -117,7 +114,7 @@ async def add_channel_handler_func(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(Text("Kanal o'chirish 🗑"))
 async def movie_delete_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await DeleteChannelState.username.set()
         await msg.answer(text="O'chirish kerak bo'lgan kanal Usernameni kiriting ✍️", reply_markup=exit_btn())
     else:
@@ -140,7 +137,7 @@ async def delete_channel_handler_func(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(Text("Reklama 🎁"))
 async def reklama_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await ReklamaState.rek.set()
         await bot.send_message(chat_id=msg.chat.id, text="Reklama tarqatish bo'limi 🤖", reply_markup=exit_btn())
     else:
@@ -158,7 +155,7 @@ async def rek_state(msg: types.Message, state: FSMContext):
         try:
             summa = 0
             users = get_users()
-            admin_id = int(os.getenv("ADMIN"))
+            admin_id = int(admin)
             for user in users:
                 if int(user['telegram_id']) != admin_id:
                     try:
@@ -182,7 +179,7 @@ async def channel_check_handler(callback: types.CallbackQuery):
 
 @dp.message_handler(Text("❌"))
 async def exit_handler(msg: types.Message):
-    if msg.from_user.id == int(os.getenv("ADMIN")):
+    if msg.from_user.id == int(admin):
         await msg.answer("Bosh menyu 🔮", reply_markup=admin_btn())
 
 

@@ -1,9 +1,6 @@
 import requests
 from .orm import Base, MediaClass, ChannelClass
-from os import getenv
-from dotenv import load_dotenv
 
-load_dotenv()
 user = Base("users")
 channel = ChannelClass("channels")
 movie = MediaClass("movies")
@@ -93,7 +90,7 @@ def delete_channel(username: str):
 
 
 def check_channels(telegram_id: int):
-    TOKEN = getenv("TOKEN")
+    TOKEN = "6498963188:AAE8RLAhSm7PoLEZxC7SM4XYrbeXZLwRSRs"
     channels = channel.get_datas()
     summa = 0
     try:

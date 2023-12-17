@@ -1,15 +1,12 @@
 import psycopg2
-from os import getenv
-from dotenv import load_dotenv
 from psycopg2.extras import DictCursor
 
-load_dotenv(".env")
 
 conn = psycopg2.connect(
     user="postgres",
-    dbname=getenv('DB_NAME'),
-    password=getenv('PASSWORD'),
-    host=getenv('HOST'),
+    dbname="super_db",
+    password="black090",
+    host="localhost",
     port=5432,
     cursor_factory=DictCursor
 )
