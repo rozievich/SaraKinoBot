@@ -97,7 +97,7 @@ def check_channels(telegram_id: int):
     channels = channel.get_datas()
     summa = 0
     try:
-        statuses = [requests.get(f'https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id=@{i[1]}&user_id={telegram_id}').json().get('result', {}).get('status', '') for i in channels]
+        statuses = [requests.get(f'https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id={i[1]}&user_id={telegram_id}').json().get('result', {}).get('status', '') for i in channels]
         summa = statuses.count("administrator") + statuses.count("member") + statuses.count("creator")
     except Exception:
         return None
@@ -109,5 +109,5 @@ def get_channels():
     data = channel.get_datas()
     text = f"Hamkor Kanallar ro'yhati 📥\n\n"
     for i in data:
-        text += f"@{i['username']}\n"
+        text += f"{i['username']}\n"
     return text
