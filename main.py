@@ -88,13 +88,15 @@ async def handle_media_id(msg: types.Message, state: FSMContext):
         if msg.text == "❌":
             await msg.answer("Kino yuklash bekor qilindi ❌", reply_markup=movies_btn())
             await state.finish()
-        else:
+        elif not get_movie(int(msg.text)):
             async with state.proxy() as data:
                 data['post_id'] = msg.text
                 data = create_movie(post_id=int(data["post_id"]), file_id=data['file_id'], caption=data['caption'])
             if data:
                 await msg.reply(f"Kino malumotlar bazasiga saqlandi ✅\nKino Kodi: {data}", reply_markup=movies_btn())
             await state.finish()
+        else:
+            await msg.reply(f"{msg.text} - ID bilan kino mavjud!")
     except:
         await msg.answer("Iltimos Kod sifatida Raqam yuboring!", reply_markup=exit_btn())
 
