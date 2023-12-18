@@ -47,8 +47,8 @@ async def media_statistika_handler(msg: types.Message):
         await msg.answer("Kinolar kategoriyasiga xush kelibsiz 🛠", reply_markup=movies_btn())
     else:
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
-
-
+        
+        
 @dp.message_handler(Text("Kino Statistika 📊"))
 async def kino_statistika_handler(msg: types.Message):
     if msg.from_user.id == int(admin):
@@ -197,16 +197,14 @@ async def rek_state(msg: types.Message, state: FSMContext):
         await state.finish()
         try:
             summa = 0
-            users = get_users()
-            admin_id = int(admin)
-            for user in users:
-                if int(user['telegram_id']) != admin_id:
+            for user in get_users():
+                if int(user['telegram_id']) != int(admin):
                     try:
                         await msg.copy_to(int(user['telegram_id']), caption=msg.caption, caption_entities=msg.caption_entities, reply_markup=msg.reply_markup)
                     except Exception as e:
                         print(f"Send Error: {e}")
                         summa += 1
-            await bot.send_message(admin_id, text=f"Botni bloklagan Userlar soni: {summa}")
+            await bot.send_message(int(admin), text=f"Botni bloklagan Userlar soni: {summa}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -216,6 +214,7 @@ async def channel_check_handler(callback: types.CallbackQuery):
     check = check_channels(callback.from_user.id)
     if check:
         await callback.message.delete()
+        await callback.answer("Obuna bo'lganingiz uchun rahmat ☺️")
     else:
         await callback.message.answer("Iltimos quidagi kanallarga obuna bo'ling", reply_markup=forced_channel())
 
