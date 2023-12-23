@@ -1,9 +1,6 @@
-import os
-import requests
-from dotenv import load_dotenv
 from .orm import Base, MediaClass, ChannelClass
 
-load_dotenv(".env")
+
 user = Base("users")
 channel = ChannelClass("channels")
 movie = MediaClass("movies")
@@ -81,35 +78,22 @@ def delete_movie(post_id: int):
 
 
 # Channel table data
-def create_channel(username: str):
-    data = channel.get_data(username)
+def create_channel(username: str, channel_id: str):
+    data = channel.get_data(channel_id=channel_id)
     if data:
         return False
     else:
-        channel.create_data(username)
+        channel.create_data(username, channel_id)
         return True
+    
 
-
-def delete_channel(username: str):
-    data = channel.get_data(username)
+def delete_channel(channel_id: str):
+    data = channel.get_data(channel_id)
     if data:
-        channel.delete_data(username)
+        channel.delete_data(channel_id)
         return True
     else:
         return None
-
-
-def check_channels(telegram_id: int):
-    TOKEN = os.getenv("TOKEN")
-    channels = channel.get_datas()
-    summa = 0
-    try:
-        statuses = [requests.get(f'https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id={i[1]}&user_id={telegram_id}').json().get('result', {}).get('status', '') for i in channels]
-        summa = statuses.count("administrator") + statuses.count("member") + statuses.count("creator")
-    except Exception:
-        return None
-
-    return summa == len(channels)
 
 
 def get_channels():
@@ -118,3 +102,6 @@ def get_channels():
     for i in data:
         text += f"{i['username']}\n"
     return text
+
+def get_channels_all():
+    return channel.get_datas()

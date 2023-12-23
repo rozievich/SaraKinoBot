@@ -4,8 +4,8 @@ from psycopg2.extras import DictCursor
 
 conn = psycopg2.connect(
     user="postgres",
-    dbname="super_db",
-    password="black090",
+    dbname="sara_db",
+    password="black0613",
     host="localhost",
     port=5432,
     cursor_factory=DictCursor
@@ -24,7 +24,8 @@ def startup_table():
     channel_query = '''
     CREATE TABLE IF NOT EXISTS channels(
         id BIGSERIAL PRIMARY KEY,
-        username VARCHAR(32) UNIQUE,
+        username VARCHAR(128) UNIQUE,
+        channel_id VARCHAR(128) NOT NULL,
         created_at TIMESTAMP DEFAULT now()
     )
     '''

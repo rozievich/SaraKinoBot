@@ -63,17 +63,19 @@ class MediaClass(Base):
 
 class ChannelClass(Base):
 
-    def create_data(self, username: str):
-        query = f"INSERT INTO {self.table}(username) VALUES (%s)"
-        cur.execute(query, (username, ))
+    def create_data(self, username: str, channel_id: str):
+        query = f"INSERT INTO {self.table}(username, channel_id) VALUES (%s, %s)"
+        cur.execute(query, (username, channel_id))
         conn.commit()
 
-    def get_data(self, username: str):
-        query = f"SELECT * FROM {self.table} WHERE username = %s"
-        cur.execute(query, (username,))
+
+    def get_data(self, channel_id: str):
+        query = f"SELECT * FROM {self.table} WHERE channel_id = %s"
+        cur.execute(query, (channel_id,))
         return cur.fetchone()
 
-    def delete_data(self, username: str):
-        query = f"DELETE FROM {self.table} WHERE username = %s"
-        cur.execute(query, (username, ))
+
+    def delete_data(self, channel_id: str):
+        query = f"DELETE FROM {self.table} WHERE channel_id = %s"
+        cur.execute(query, (channel_id, ))
         conn.commit()

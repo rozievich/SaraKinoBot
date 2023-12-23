@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, types, executor
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 from states.state_admin import AddMedia, ReklamaState, AddChannelState, DeleteChannelState, DeleteMovieState
-from models.model import create_user, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, check_channels, get_users, delete_movie
+from models.model import create_user, get_movie, statistika_user, statistika_movie, create_movie, get_channels, create_channel, delete_channel, get_users, delete_movie, get_channels_all
 from buttons.inline_keyboards import forced_channel
 from buttons.reply_keyboards import admin_btn, channels_btn, movies_btn, exit_btn
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -17,6 +17,7 @@ TOKEN = os.getenv("TOKEN")
 bot = Bot(TOKEN)
 dp = Dispatcher(bot=bot, storage=MemoryStorage())
 admin = os.getenv("ADMIN")
+
 
 @dp.message_handler(commands="start")
 async def welcome_handler(msg: types.Message):
@@ -124,7 +125,6 @@ async def handle_delete_media(msg: types.Message, state: FSMContext):
         await msg.answer("Iltimos Kod sifatida Raqam yuboring!", reply_markup=exit_btn())
 
 
-
 @dp.message_handler(Text("Kanallar 🖇"))
 async def channels_handler(msg: types.Message):
     if msg.from_user.id == int(admin):
@@ -143,12 +143,28 @@ async def add_channel_handler(msg: types.Message):
 
 
 @dp.message_handler(state=AddChannelState.username)
+async def add_channel_username_handler(msg: types.Message, state: FSMContext):
+    try:
+        if msg.text == "❌":
+            await msg.answer("Kanal qo'shish bekor qilindi ❌", reply_markup=channels_btn())
+            await state.finish()
+        else:
+            async with state.proxy() as data:
+                data['username'] = msg.text
+            await AddChannelState.channel_id.set()
+            await msg.answer(text="Iltimos Kanal ID kiriting: ", reply_markup=exit_btn())
+    except Exception as e:
+        pass
+
+
+@dp.message_handler(state=AddChannelState.channel_id)
 async def add_channel_handler_func(msg: types.Message, state: FSMContext):
     if msg.text == "❌":
         await msg.answer("Kanal qo'shish bekor qilindi ❌", reply_markup=channels_btn())
         await state.finish()
     else:
-        data = create_channel(msg.text)
+        async with state.proxy() as data:
+            data = create_channel(data['username'], msg.text)
         if data:
             await msg.answer("Kanal muvaffaqiyatli qo'shildi ✅", reply_markup=channels_btn())
             await state.finish()
@@ -213,7 +229,7 @@ async def rek_state(msg: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(lambda x: x.data == "channel_check")
 async def channel_check_handler(callback: types.CallbackQuery):
-    check = check_channels(callback.from_user.id)
+    check = await is_user_subscribed(str(callback.from_user.id))
     if check:
         await callback.message.delete()
         await callback.answer("Obuna bo'lganingiz uchun rahmat ☺️")
@@ -229,7 +245,7 @@ async def exit_handler(msg: types.Message):
 
 @dp.message_handler(lambda x: x.text.isdigit())
 async def forward_last_video(msg: types.Message):
-    check = check_channels(msg.from_user.id)
+    check = await is_user_subscribed(str(msg.from_user.id))
     if check:
         data = get_movie(int(msg.text))
         if data:
@@ -241,6 +257,18 @@ async def forward_last_video(msg: types.Message):
             await msg.reply(f"{msg.text} - id bilan hech qanday kino topilmadi ❌")
     else:
         await msg.answer("Iltimos quidagi kanallarga obuna bo'ling", reply_markup=forced_channel())
+
+
+async def is_user_subscribed(user_id):
+    channels = get_channels_all()
+    summa = 0
+    for channel in channels:
+        try:
+            member = await bot.get_chat_member(int(channel['channel_id'], user_id))
+            summa += 1 if member.status in ['member', 'administrator', 'creator'] else 0
+        except Exception as e:
+            print(e)
+    return summa == len(channels)
 
 
 async def startup(dp):

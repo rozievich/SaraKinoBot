@@ -12,6 +12,7 @@ class AddMedia(StatesGroup):
 
 class AddChannelState(StatesGroup):
     username = State()
+    channel_id = State()
 
 
 class DeleteChannelState(StatesGroup):
