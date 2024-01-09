@@ -11,6 +11,7 @@ from buttons.inline_keyboards import forced_channel
 from buttons.reply_keyboards import admin_btn, channels_btn, movies_btn, exit_btn
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
+
 load_dotenv(".env")
 logging.basicConfig(level=logging.INFO)
 TOKEN = os.getenv("TOKEN")
@@ -229,7 +230,7 @@ async def rek_state(msg: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(lambda x: x.data == "channel_check")
 async def channel_check_handler(callback: types.CallbackQuery):
-    check = await is_user_subscribed(str(callback.from_user.id))
+    check = await check_sub_channels(callback.from_user.id)
     if check:
         await callback.message.delete()
         await callback.answer("Obuna bo'lganingiz uchun rahmat ☺️")
@@ -245,7 +246,7 @@ async def exit_handler(msg: types.Message):
 
 @dp.message_handler(lambda x: x.text.isdigit())
 async def forward_last_video(msg: types.Message):
-    check = await is_user_subscribed(str(msg.from_user.id))
+    check = await check_sub_channels(msg.from_user.id)
     if check:
         data = get_movie(int(msg.text))
         if data:
@@ -259,16 +260,14 @@ async def forward_last_video(msg: types.Message):
         await msg.answer("Iltimos quidagi kanallarga obuna bo'ling", reply_markup=forced_channel())
 
 
-async def is_user_subscribed(user_id):
+async def check_sub_channels(user_id):
     channels = get_channels_all()
-    summa = 0
     for channel in channels:
-        try:
-            member = await bot.get_chat_member(int(channel['channel_id'], user_id))
-            summa += 1 if member.status in ['member', 'administrator', 'creator'] else 0
-        except Exception as e:
-            print(e)
-    return summa == len(channels)
+        chat_member = await bot.get_chat_member(chat_id=int(channel[2]), user_id=user_id)
+        if chat_member['status'] == 'left':
+            print("Xato")
+            return False
+    return True
 
 
 async def startup(dp):
