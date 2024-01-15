@@ -178,7 +178,7 @@ async def add_channel_handler_func(msg: types.Message, state: FSMContext):
 async def movie_delete_handler(msg: types.Message):
     if msg.from_user.id == int(admin):
         await DeleteChannelState.username.set()
-        await msg.answer(text="O'chirish kerak bo'lgan kanal Usernameni kiriting ✍️", reply_markup=exit_btn())
+        await msg.answer(text="O'chirish kerak bo'lgan kanal ID kiriting ✍️", reply_markup=exit_btn())
     else:
         await msg.answer("Siz admin emassiz ❌", reply_markup=types.ReplyKeyboardRemove())
 
@@ -193,7 +193,7 @@ async def delete_channel_handler_func(msg: types.Message, state: FSMContext):
         if data:
             await msg.answer("Kanal muvaffaqiyatli o'chirildi ✅", reply_markup=channels_btn())
         else:
-            await msg.answer("Bunday usernameli kanal mavjud emas ❌", reply_markup=channels_btn())
+            await msg.answer("Bunday ID uchun kanal mavjud emas ❌", reply_markup=channels_btn())
         await state.finish()
 
 
@@ -264,8 +264,8 @@ async def check_sub_channels(user_id):
     channels = get_channels_all()
     for channel in channels:
         chat_member = await bot.get_chat_member(chat_id=int(channel[2]), user_id=user_id)
+        print(chat_member['status'])
         if chat_member['status'] == 'left':
-            print("Xato")
             return False
     return True
 

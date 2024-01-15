@@ -24,8 +24,8 @@ def startup_table():
     channel_query = '''
     CREATE TABLE IF NOT EXISTS channels(
         id BIGSERIAL PRIMARY KEY,
-        username VARCHAR(128) UNIQUE,
-        channel_id VARCHAR(128) NOT NULL,
+        username VARCHAR(128) NOT NULL,
+        channel_id VARCHAR(128) UNIQUE,
         created_at TIMESTAMP DEFAULT now()
     )
     '''
