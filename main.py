@@ -246,7 +246,7 @@ async def exit_handler(msg: types.Message):
 
 @dp.message_handler(lambda x: x.text.isdigit())
 async def forward_last_video(msg: types.Message):
-    check = await check_sub_channels(msg.from_user.id)
+    check = await check_sub_channels(int(msg.from_user.id))
     if check:
         data = get_movie(int(msg.text))
         if data:
@@ -263,10 +263,12 @@ async def forward_last_video(msg: types.Message):
 async def check_sub_channels(user_id):
     channels = get_channels_all()
     for channel in channels:
-        chat_member = await bot.get_chat_member(chat_id=int(channel[2]), user_id=user_id)
-        print(chat_member['status'])
-        if chat_member['status'] == 'left':
-            return False
+        try:
+            chat_member = await bot.get_chat_member(chat_id=channel[2], user_id=user_id)
+            if chat_member['status'] == 'left':
+                return False
+        except:
+            await bot.send_message(admin, f"{channel[1]}\nBu kanal mavjud emas yoki Botning kanalga adminlik huquqi yo'q!")
     return True
 
 
